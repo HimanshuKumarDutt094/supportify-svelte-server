@@ -41,7 +41,7 @@ app.get('/getData/:param', async (req, res) => {
 		if (user) {
 			const { name, picture } = user;
 			res.json({
-				cookies: req.cookies,
+				sub: sub,
 				user: name,
 				pfp: picture
 			});
