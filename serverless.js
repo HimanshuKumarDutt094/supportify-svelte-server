@@ -1,12 +1,25 @@
-import dotenv from 'dotenv';
-dotenv.config();
+import express from 'express';
+import cors from 'cors';
 import { MongoClient } from 'mongodb';
+import dotenv from 'dotenv';
+
+dotenv.config();
+
+const app = express();
+const port = process.env.PORT || 3000;
+
 const MONGO_URI = process.env.MONGO_URI;
+const DATABASE_NAME = process.env.DATABASE_NAME || 'supportify-svelte';
+const COLLECTION_NAME = process.env.COLLECTION_NAME || 'users';
+
+app.use(cors());
+app.use(express.json());
+
 let client;
-const production = process.env.NODE_ENV === 'production';
+
 async function connectToDatabase() {
 	if (!client) {
-		client = new MongoClient(MONGO_URI);
+		client = new MongoClient(MONGO_URI, { useUnifiedTopology: true });
 
 		try {
 			await client.connect();
@@ -19,34 +32,30 @@ async function connectToDatabase() {
 	return client;
 }
 
-export default async function serverless(request, response) {
+app.get('/getData/:param', async (req, res) => {
 	try {
-		const client = await connectToDatabase();
-		const db = client.db('supportify-svelte');
-		const users = db.collection('users');
-		const sub = request.query.query.toString();
-		const user = await users.findOne({ sub });
-		const username = user.name;
-		const pfp = user.picture;
-		response.setHeader(
-			'Access-Control-Allow-Origin',
-			production ? 'https://supportify-svelte.vercel.app' : 'http://localhost:3000'
-		);
-		response.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
-		response.setHeader(
-			'Access-Control-Allow-Headers',
-			'Origin, X-Requested-With, Content-Type, Accept'
-		);
+		const db = await connectToDatabase();
+		const collection = db.collection(COLLECTION_NAME);
 
-		response.status(200).json({
-			cookies: request.cookies,
-			user: username,
-			pfp: pfp
-		});
+		const param = req.params.param;
+		const user = await collection.findOne({ sub: param });
+
+		if (user) {
+			const { name, picture } = user;
+			res.json({
+				cookies: req.cookies,
+				user: name,
+				pfp: picture
+			});
+		} else {
+			res.status(404).json({ message: 'User not found' });
+		}
 	} catch (error) {
 		console.error('Error fetching user data:', error);
-		response
-			.status(500)
-			.send({ error: 'Internal Server Error api req failed for some reason,', request });
+		res.status(500).json({ error: 'Internal Server Error' });
 	}
-}
+});
+
+app.listen(port, () => {
+	console.log(`Server is running on http://localhost:${port}`);
+});
