@@ -3,9 +3,10 @@
 	"version": "1.0.0",
 	"description": "",
 	"main": "index.js",
+	"type": "module",
 	"scripts": {
 		"test": "echo \"Error: no test specified\" && exit 1",
-		"start": "node serverless.ts"
+		"start": "node   serverless.js"
 	},
 	"keywords": [],
 	"author": "",
@@ -15,6 +16,7 @@
 		"axios": "^1.6.2",
 		"cors": "^2.8.5",
 		"mongodb": "^6.3.0",
+		"ts-node": "^10.9.1",
 		"vercel": "^32.6.1"
 	}
 }

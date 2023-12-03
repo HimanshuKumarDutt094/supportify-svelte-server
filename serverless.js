@@ -1,14 +1,30 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
 import dotenv from 'dotenv';
 dotenv.config();
+import { MongoClient } from 'mongodb';
+const MONGO_URI = process.env.MONGO_URI;
+let client;
 const production = process.env.NODE_ENV === 'production';
+async function connectToDatabase() {
+	if (!client) {
+		client = new MongoClient(MONGO_URI);
 
-export default async function serverless(request: VercelRequest, response: VercelResponse) {
+		try {
+			await client.connect();
+		} catch (error) {
+			console.error('Error connecting to MongoDB:', error);
+			throw error;
+		}
+	}
+
+	return client;
+}
+
+export default async function serverless(request, response) {
 	try {
 		const client = await connectToDatabase();
 		const db = client.db('supportify-svelte');
 		const users = db.collection('users');
-		const sub = request.query.query as string;
+		const sub = request.query.query.toString();
 		const user = await users.findOne({ sub });
 		const username = user.name;
 		const pfp = user.picture;
@@ -33,23 +49,4 @@ export default async function serverless(request: VercelRequest, response: Verce
 			.status(500)
 			.send({ error: 'Internal Server Error api req failed for some reason,', request });
 	}
-}
-
-import { MongoClient } from 'mongodb';
-const MONGO_URI = process.env.MONGO_URI;
-let client;
-
-export async function connectToDatabase() {
-	if (!client) {
-		client = new MongoClient(MONGO_URI);
-
-		try {
-			await client.connect();
-		} catch (error) {
-			console.error('Error connecting to MongoDB:', error);
-			throw error;
-		}
-	}
-
-	return client;
 }
