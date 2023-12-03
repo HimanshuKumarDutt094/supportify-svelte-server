@@ -39,7 +39,7 @@ app.get('/getData/:param', async (req, res) => {
 		const user = await collection.findOne({ sub: param });
 
 		if (user) {
-			const { name, picture } = user;
+			const { sub, name, picture } = user;
 			res.json({
 				sub: sub,
 				user: name,
