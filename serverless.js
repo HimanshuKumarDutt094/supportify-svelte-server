@@ -34,7 +34,8 @@ async function connectToDatabase() {
 
 app.get('/getData/:param', async (req, res) => {
 	try {
-		const db = await connectToDatabase();
+		const d = await connectToDatabase();
+		const db = d.db(DATABASE_NAME);
 		const collection = db.collection(COLLECTION_NAME);
 
 		const param = req.params.param;
