@@ -1,5 +1,8 @@
+import * as cheerio from 'cheerio';
+
 import express from 'express';
 import cors from 'cors';
+import axios from 'axios';
 import { MongoClient } from 'mongodb';
 
 const app = express();
